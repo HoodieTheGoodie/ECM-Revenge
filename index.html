@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECM Revenge - Particle Run</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #06091b;
+      overflow: hidden;
+      color: #ffffff;
+    }
+
+    #hud {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.4;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">Score: <span id="score">0</span><br />Collect particles. Use arrow keys or WASD.</div>
+  <canvas id="game"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scoreNode = document.getElementById("score");
+
+    const state = {
+      player: { x: 200, y: 200, size: 16, speed: 220 },
+      particles: [],
+      sparks: [],
+      score: 0,
+      keys: new Set(),
+      spawnTimer: 0,
+      animationTime: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+
+    function resize() {
+      state.width = window.innerWidth;
+      state.height = window.innerHeight;
+      canvas.width = state.width;
+      canvas.height = state.height;
+      state.player.x = Math.min(state.player.x, state.width - state.player.size);
+      state.player.y = Math.min(state.player.y, state.height - state.player.size);
+    }
+
+    function randomParticle() {
+      const size = 4 + Math.random() * 10;
+      return {
+        x: Math.random() * (state.width - size * 2) + size,
+        y: Math.random() * (state.height - size * 2) + size,
+        size,
+        vx: (Math.random() - 0.5) * 50,
+        vy: (Math.random() - 0.5) * 50,
+        life: 8 + Math.random() * 8,
+        hue: 180 + Math.random() * 120,
+      };
+    }
+
+    function emitSparks(x, y, hue) {
+      for (let i = 0; i < 10; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 80 + Math.random() * 140;
+        state.sparks.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 0.4 + Math.random() * 0.4,
+          maxLife: 0.8,
+          hue,
+        });
+      }
+    }
+
+    function update(dt) {
+      const { player, keys } = state;
+      let dx = 0;
+      let dy = 0;
+
+      if (keys.has("arrowup") || keys.has("w")) dy -= 1;
+      if (keys.has("arrowdown") || keys.has("s")) dy += 1;
+      if (keys.has("arrowleft") || keys.has("a")) dx -= 1;
+      if (keys.has("arrowright") || keys.has("d")) dx += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        const mag = Math.hypot(dx, dy);
+        player.x += (dx / mag) * player.speed * dt;
+        player.y += (dy / mag) * player.speed * dt;
+      }
+
+      player.x = Math.max(player.size, Math.min(state.width - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(state.height - player.size, player.y));
+
+      state.spawnTimer -= dt;
+      if (state.spawnTimer <= 0 && state.particles.length < 90) {
+        state.particles.push(randomParticle());
+        state.spawnTimer = 0.08;
+      }
+
+      for (let i = state.particles.length - 1; i >= 0; i -= 1) {
+        const p = state.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+
+        if (p.x < p.size || p.x > state.width - p.size) p.vx *= -1;
+        if (p.y < p.size || p.y > state.height - p.size) p.vy *= -1;
+
+        const distance = Math.hypot(p.x - player.x, p.y - player.y);
+        if (distance < p.size + player.size) {
+          state.score += 1;
+          scoreNode.textContent = state.score;
+          emitSparks(p.x, p.y, p.hue);
+          state.particles.splice(i, 1);
+          continue;
+        }
+
+        if (p.life <= 0) {
+          state.particles.splice(i, 1);
+        }
+      }
+
+      for (let i = state.sparks.length - 1; i >= 0; i -= 1) {
+        const s = state.sparks[i];
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.life -= dt;
+        s.vx *= 0.97;
+        s.vy *= 0.97;
+
+        if (s.life <= 0) {
+          state.sparks.splice(i, 1);
+        }
+      }
+
+      state.animationTime += dt;
+    }
+
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, state.height);
+      gradient.addColorStop(0, "#081026");
+      gradient.addColorStop(1, "#070713");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, state.width, state.height);
+    }
+
+    function draw() {
+      drawBackground();
+
+      for (const p of state.particles) {
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${p.hue}, 90%, 60%, 0.9)`;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (const s of state.sparks) {
+        ctx.beginPath();
+        const alpha = Math.max(0, s.life / s.maxLife);
+        ctx.fillStyle = `hsla(${s.hue}, 100%, 70%, ${alpha})`;
+        ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const pulse = 0.8 + Math.sin(state.animationTime * 8) * 0.2;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(110, 220, 255, ${pulse})`;
+      ctx.arc(state.player.x, state.player.y, state.player.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(200, 245, 255, 0.9)";
+      ctx.lineWidth = 2;
+      ctx.arc(state.player.x, state.player.y, state.player.size + 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    let lastTime = performance.now();
+    function gameLoop(time) {
+      const dt = Math.min((time - lastTime) / 1000, 0.033);
+      lastTime = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      if (key.startsWith("arrow")) event.preventDefault();
+      state.keys.add(key);
+    });
+    window.addEventListener("keyup", (event) => state.keys.delete(event.key.toLowerCase()));
+
+    resize();
+    for (let i = 0; i < 30; i += 1) state.particles.push(randomParticle());
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
