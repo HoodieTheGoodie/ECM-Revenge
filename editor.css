@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
+:root { --ink:#071013; --panel:#0c2423; --line:#315e58; --cyan:#8de9db; --acid:#d8f36a; --muted:#78918d; --red:#d94b58; }
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; background:#132523; color:var(--cyan); font-family:'Space Mono',monospace; }
+.editor-shell { width:min(1500px,100%); min-height:100vh; margin:auto; padding:28px; }
+.editor-header { display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:22px; }
+.eyebrow,.panel-heading { color:var(--acid); font-size:10px; letter-spacing:.15em; }
+h1 { margin:5px 0 0; color:#effff0; font:700 42px/.85 'Barlow Condensed',sans-serif; letter-spacing:.04em; }
+.header-actions { display:flex; align-items:center; gap:10px; }
+button,a { border:1px solid var(--line); background:#102a29; color:var(--cyan); padding:9px 12px; font:10px 'Space Mono',monospace; text-decoration:none; cursor:pointer; }
+button:hover,a:hover { border-color:var(--acid); color:var(--acid); }
+.editor-layout { display:grid; grid-template-columns:190px minmax(500px,1fr) 250px; gap:16px; align-items:start; }
+.tool-panel,.notes-panel,.workspace { border:1px solid var(--line); background:#071719cc; }
+.tool-panel,.notes-panel { padding:16px; }
+.panel-heading { padding-bottom:10px; border-bottom:1px solid #234944; }
+.room-list { display:grid; gap:5px; padding:12px 0 22px; }
+.room-button { width:100%; text-align:left; padding:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.room-button.is-current { border-color:var(--acid); color:var(--acid); }
+.tool-list { display:grid; gap:5px; padding-top:12px; }
+.tool-button { text-align:left; }
+.tool-button.is-selected { border-color:var(--acid); color:var(--acid); box-shadow:inset 3px 0 var(--acid); }
+.color-control { display:grid; gap:6px; margin-top:12px; color:var(--muted); font-size:9px; }
+.color-control select { border:1px solid var(--line); background:#102a29; color:var(--cyan); padding:7px; font:9px 'Space Mono',monospace; }
+.zoom-controls { display:flex; align-items:center; gap:5px; margin-top:14px; color:var(--muted); font-size:9px; }
+.zoom-controls button { padding:6px 8px; }
+.tool-help,.notes-panel p { color:var(--muted); font-size:9px; line-height:1.6; }
+.doors-heading { margin-top:20px; }
+.door-list { display:grid; gap:5px; padding-top:10px; }
+.wide-tool { width:100%; margin-top:10px; font-size:8px; }
+.door-row { display:flex; align-items:center; justify-content:space-between; gap:5px; color:var(--muted); font-size:8px; }
+.door-row span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.door-row b { color:var(--acid); font-weight:400; }
+.door-row button { padding:5px 6px; font-size:8px; }
+.empty-doors { color:var(--muted); font-size:8px; }
+.workspace { min-width:0; padding:10px; }
+.canvas-wrap { height:calc(100vh - 190px); min-height:480px; overflow:auto; background:#050d0e; touch-action:pan-x pan-y; }
+canvas { display:block; width:auto; max-width:none; height:auto; image-rendering:pixelated; cursor:crosshair; }
+.workspace-footer { display:flex; justify-content:space-between; gap:10px; padding:10px 2px 0; color:var(--muted); font-size:9px; }
+textarea { width:100%; min-height:220px; resize:vertical; margin:14px 0 8px; padding:10px; border:1px solid var(--line); outline:0; background:#071013; color:#effff0; font:10px/1.6 'Space Mono',monospace; }
+textarea:focus { border-color:var(--cyan); }
+.export-heading { margin-top:28px; }
+.muted { color:var(--muted); }
+#reset-builder { margin-top:8px; color:var(--muted); }
+@media (max-width:1000px) { .editor-layout { grid-template-columns:160px minmax(0,1fr); } .notes-panel { grid-column:1/-1; } }
+@media (max-width:620px) { .editor-shell { padding:14px; } .editor-header { align-items:start; flex-direction:column; } h1 { font-size:34px; } .header-actions { width:100%; } .header-actions button,.header-actions a { flex:1; text-align:center; } .editor-layout { grid-template-columns:1fr; } .tool-panel,.notes-panel { order:2; } .workspace { order:1; } }

@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root { --ink: #071013; --cyan: #8de9db; --acid: #d8f36a; --coral: #ff786e; --muted: #78918d; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #172a29; color: var(--cyan); font-family: 'Space Mono', monospace; }
+body::before { content: ''; position: fixed; inset: 0; opacity: .14; background-image: linear-gradient(125deg, transparent 0 48%, #8de9db 48.2% 48.5%, transparent 48.7% 100%), linear-gradient(55deg, transparent 0 48%, #d8f36a 48.2% 48.5%, transparent 48.7% 100%); background-size: 90px 90px; pointer-events: none; }
+.shell { width: min(100%, 1100px); padding: 26px; }
+.game-frame { position: relative; overflow: hidden; border: 1px solid #4e8079; box-shadow: 0 0 0 8px #0c1b1c, 0 24px 70px #061011cc; background: var(--ink); }
+.game-frame.is-hidden { display: none; }
+canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.scanlines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 3px, #b8fff00b 4px, transparent 5px); mix-blend-mode: screen; }
+.mini-map { position: absolute; z-index: 3; left: 22px; bottom: 20px; width: 106px; height: 74px; border: 1px solid #4e8079; background: #071013bb; }
+.mini-room { position: absolute; display: grid; width: 14px; height: 14px; place-items: center; border: 1px solid #78918d; color: var(--muted); font-size: 8px; }
+.mini-room.is-current { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 7px #8ddcff; }
+.hud-top { position: absolute; z-index: 2; inset: 22px 26px auto; display: flex; align-items: flex-start; justify-content: flex-start; text-shadow: 0 2px 0 #071013; }
+.status-hud { display: flex; align-items: flex-start; gap: 12px; }
+.quick-actions { display: grid; gap: 5px; }
+.inventory-button { display: grid; width: 32px; height: 32px; padding: 0; place-items: center; border: 1px solid var(--cyan); background: #102a29cc; color: var(--cyan); cursor: pointer; }
+.inventory-button:hover { border-color: var(--acid); color: var(--acid); }
+.inventory-button > span { font: 700 13px 'Space Mono', monospace; }
+.bag-icon { position: relative; display: block; width: 16px; height: 14px; border: 2px solid currentColor; border-radius: 2px; }
+.bag-icon::before { content: ''; position: absolute; top: -7px; left: 3px; width: 6px; height: 7px; border: 2px solid currentColor; border-bottom: 0; border-radius: 5px 5px 0 0; }
+.weapon-quickbar { display: grid; gap: 4px; }
+.weapon-slot-button { position: relative; display: grid; width: 32px; height: 32px; padding: 0; place-items: center; border: 1px solid #28514c; background: #071719dd; color: var(--muted); cursor: pointer; }
+.weapon-slot-button:hover, .weapon-slot-button.is-active { border-color: var(--acid); color: var(--acid); }
+.weapon-slot-button b { position: absolute; right: 4px; bottom: 2px; font: 700 8px 'Space Mono', monospace; }
+.weapon-icon { display: block; width: 12px; height: 12px; border: 2px solid var(--acid); border-radius: 50%; background: transparent; }
+.weapon-slot-button.has-weapon .weapon-icon { width: 18px; height: 3px; border: 0; border-radius: 0; background: #dcecff; box-shadow: 0 0 5px #8ddcff; transform: rotate(-35deg); }
+.status-bars { display: grid; gap: 5px; width: 150px; }
+.status-row { display: flex; align-items: center; gap: 7px; color: #effff0; font-size: 9px; }
+.status-bar { display: block; flex: 1; height: 7px; overflow: hidden; border: 1px solid #4e8079; background: #071719; }
+.status-bar span { display: block; width: 100%; height: 100%; transition: width .15s linear; }
+.health-bar span { background: var(--coral); }
+.stamina-bar span { background: var(--acid); }
+.experience-bar span { background: #68f58d; }
+.full-screen-menu { position: fixed; inset: 0; z-index: 10; display: none; place-items: center; background: #071013; }
+.full-screen-menu.is-visible { display: grid; }
+.menu-screen { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; background: #071013e8; }
+.menu-screen.is-visible { display: grid; }
+.menu-panel { display: grid; width: min(360px, calc(100% - 40px)); gap: 12px; padding: 28px; border: 1px solid #5b958b; background: #0c2423f5; box-shadow: 0 16px 40px #06101199; }
+.menu-kicker { margin: 0; color: var(--acid); font-size: 10px; letter-spacing: .16em; }
+.menu-panel h1, .menu-panel h2 { margin: 0 0 12px; color: #effff0; font-family: 'Barlow Condensed', sans-serif; letter-spacing: .04em; }
+.menu-panel h1 { font-size: 42px; line-height: .9; }
+.menu-panel h2 { font-size: 30px; }
+.menu-panel button { min-height: 36px; border: 1px solid #4e8079; background: #102a29; color: var(--cyan); font: 700 11px 'Space Mono', monospace; text-transform: uppercase; cursor: pointer; }
+.menu-panel button:hover:not(:disabled) { border-color: var(--acid); color: var(--acid); }
+.menu-panel button:disabled { cursor: not-allowed; opacity: .35; }
+.death-copy { margin: -4px 0 4px; color: var(--muted); font-size: 10px; }
+.inventory-item, .setting-row { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid #28514c; color: #effff0; font-size: 11px; }
+.inventory-item span, .setting-row span { color: var(--acid); font-size: 9px; }
+.inventory-panel { width: min(820px, calc(100% - 40px)); padding: 28px; border: 1px solid #5b958b; background: #0c2423f5; box-shadow: 0 16px 40px #06101199; }
+.inventory-header { display: flex; align-items: start; justify-content: space-between; border-bottom: 1px solid #28514c; }
+.inventory-header h2 { margin-bottom: 18px; }
+.close-button { width: 30px; height: 30px; border: 1px solid #4e8079; background: transparent; color: var(--cyan); cursor: pointer; }
+.close-button:hover { border-color: var(--acid); color: var(--acid); }
+.inventory-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.inventory-column { min-width: 0; padding-top: 16px; }
+.inventory-column h3, .locked-heading { margin: 0 0 12px; color: var(--acid); font-size: 10px; letter-spacing: .14em; }
+.inventory-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid #28514c; }
+.item-name { display: flex; align-items: center; gap: 10px; }
+.item-icon { display: inline-block; flex: 0 0 auto; width: 16px; height: 16px; }
+.placeholder-circle { border: 2px solid var(--acid); border-radius: 50%; background: #d8f36a33; }
+.sword-icon { width: 20px; height: 4px; margin: 5px; background: #dcecff; box-shadow: 0 0 5px #8ddcff; transform: rotate(-45deg); }
+.inventory-row strong, .equipment-slot strong { display: block; color: #effff0; font-size: 10px; }
+.inventory-row small, .equipment-slot small { display: block; margin-top: 4px; color: var(--muted); font-size: 8px; }
+.placeholder-tag { color: var(--muted); font-size: 8px; }
+.equipped-tag { color: var(--acid); font-size: 8px; }
+.key-tag { color: var(--cyan); font-size: 8px; }
+.inventory-actions { display: flex; gap: 5px; opacity: 0; transition: opacity .15s ease; }
+.inventory-row:hover .inventory-actions, .inventory-row:focus-within .inventory-actions { opacity: 1; }
+.inventory-actions button { border: 1px solid #4e8079; background: #102a29; color: var(--cyan); font: 8px 'Space Mono', monospace; cursor: pointer; }
+.inventory-actions button:hover { border-color: var(--acid); color: var(--acid); }
+.empty-inventory { color: var(--muted); font-size: 10px; }
+.equipment-slots, .weapon-slots, .locked-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.equipment-slot, .weapon-slots div, .locked-slots div { min-height: 54px; padding: 10px; border: 1px solid #28514c; background: #071719; }
+.weapon-heading { display: flex; align-items: baseline; justify-content: space-between; margin-top: 22px; }
+.weapon-heading select { border: 1px solid #4e8079; background: #102a29; color: var(--cyan); font: 9px 'Space Mono', monospace; }
+.weapon-slots div { color: var(--muted); font-size: 9px; }
+.weapon-slots div:nth-child(1) { border-color: var(--acid); color: var(--acid); }
+.locked-heading { margin-top: 22px; }
+.locked-slots div { display: grid; min-height: 38px; place-items: center; color: #4e8079; font-size: 8px; }
+.inventory-hint { margin: 22px 0 0; color: var(--muted); font-size: 9px; }
+.map-panel { position: relative; width: min(820px, calc(100% - 40px)); min-height: 480px; padding: 28px; border: 1px solid #5b958b; background: #0c2423f5; box-shadow: 0 16px 40px #06101199; }
+.map-header { display: flex; justify-content: space-between; border-bottom: 1px solid #28514c; }
+.map-header h2 { margin: 10px 0 18px; color: #effff0; font: 700 30px/.9 'Barlow Condensed', sans-serif; }
+.map-viewport { position: relative; height: 300px; margin: 20px 0 68px; overflow: hidden; border: 1px solid #28514c; cursor: grab; }
+.map-viewport.is-dragging { cursor: grabbing; }
+.map-rooms { position: absolute; top: 0; left: 0; min-width: 112px; min-height: 92px; transform-origin: 0 0; }
+.map-room { position: absolute; display: grid; width: 96px; height: 72px; place-items: center; border: 1px solid #4e8079; background: #102a29; color: var(--muted); cursor: pointer; }
+.map-room.is-current { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 15px #8ddcff55; }
+.map-room:hover { border-color: var(--acid); }
+.map-room b { position: absolute; top: 4px; right: 7px; color: var(--acid); font-size: 16px; }
+.map-tools { position: absolute; right: 28px; bottom: 24px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.map-tools button { min-height: 28px; border: 1px solid #4e8079; background: #102a29; color: var(--cyan); font: 8px 'Space Mono', monospace; cursor: pointer; }
+.map-tools button:hover, .map-tools button.is-selected { border-color: var(--acid); color: var(--acid); }
+.map-tools span { width: 100%; color: var(--muted); font-size: 8px; text-align: right; }
+.room-view-overlay { background: transparent; pointer-events: none; }
+.room-view-label { position: absolute; top: 30px; left: 50%; display: grid; gap: 5px; transform: translateX(-50%); padding: 10px 16px; border: 1px solid #4e8079; background: #071013bb; text-align: center; }
+.room-view-label strong { color: #effff0; font: 700 22px 'Barlow Condensed', sans-serif; }
+.room-view-label span { color: var(--muted); font-size: 8px; }
+.loading-panel { width: min(420px, calc(100% - 40px)); }
+.loading-panel h2 { margin: 10px 0 20px; color: #effff0; font: 700 34px/.9 'Barlow Condensed', sans-serif; }
+.loading-track { height: 8px; border: 1px solid #4e8079; background: #102a29; }
+.loading-track span { display: block; width: 60%; height: 100%; background: var(--acid); animation: loading-progress 1s ease-in-out infinite alternate; }
+@keyframes loading-progress { from { width: 12%; } to { width: 94%; } }
+@media (max-width: 620px) { .shell { padding: 10px; } .game-frame { box-shadow: 0 0 0 4px #0c1b1c; } .hud-top { inset: 13px 14px auto; } .status-hud { gap: 8px; } .status-bars { width: 125px; } }
+@media (max-width: 620px) { .inventory-panel { width: calc(100% - 20px); padding: 18px; } .inventory-columns { grid-template-columns: 1fr; gap: 10px; max-height: 75vh; overflow-y: auto; } .inventory-hint { display: none; } }
+@media (max-width: 620px) { .mini-map { left: 12px; bottom: 12px; transform: scale(.85); transform-origin: bottom left; } .map-panel { width: calc(100% - 20px); min-height: 420px; padding: 18px; } .map-tools { right: 18px; bottom: 18px; } }

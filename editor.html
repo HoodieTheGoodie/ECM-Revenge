@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Echo Maze 2 // Room Builder</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <header class="editor-header"><div><span class="eyebrow">ECHO MAZE 2</span><h1>ROOM BUILDER</h1></div><div class="header-actions"><button id="undo-edit">Undo</button><button id="redo-edit">Redo</button><button id="playtest-room">Playtest Room</button><button id="export-room">Export Rooms</button><button id="import-room">Import Rooms</button><input id="import-file" type="file" accept="application/json,.json" hidden><a href="index.html">Back to Game</a></div></header>
+    <section class="editor-layout">
+      <aside class="tool-panel">
+        <div class="panel-heading">ROOMS</div><div id="room-list" class="room-list"></div>
+        <div class="panel-heading">TOOLS</div>
+        <div class="tool-list"><button class="tool-button is-selected" data-tool="select">Select / Open Door</button><button class="tool-button" data-tool="spawn">Player Spawn</button><button class="tool-button" data-tool="wall">Wall</button><button class="tool-button" data-tool="door">Room Door</button><button class="tool-button" data-tool="maze-door">Maze Door</button><button class="tool-button" data-tool="locked-door">Locked Door</button><button class="tool-button" data-tool="key">Key</button><button class="tool-button" data-tool="chaser">Chaser</button><button class="tool-button" data-tool="chest">Chest</button><button class="tool-button" data-tool="erase">Erase</button></div>
+        <div class="panel-heading doors-heading">DOORS</div><button id="generate-maze" class="wide-tool">Generate Maze From Doors</button>
+        <label class="color-control">Lock / key color<select id="lock-color"><option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Yellow</option><option value="purple">Purple</option></select></label>
+        <label class="color-control">Locked door rule<select id="lock-rule"><option value="key">Matching key</option><option value="all-enemies">Clear all enemies</option><option value="switches">Switch puzzle</option></select></label>
+        <div class="zoom-controls"><button id="zoom-out">-</button><span id="zoom-value">100%</span><button id="zoom-in">+</button><button id="zoom-reset">Reset</button></div>
+        <p class="tool-help">The canvas is larger than the viewport and scrolls. Drag walls. Click a door to enter its room. Erase doors to remove connected room trees.</p>
+      </aside>
+      <section class="workspace"><div class="canvas-wrap"><canvas id="editor-canvas" width="960" height="600"></canvas></div><div class="workspace-footer"><span id="room-status"></span><span>Autosaves locally</span></div></section>
+      <aside class="notes-panel"><div class="panel-heading">ROOM NOTES</div><p>Describe story moments, tutorials, dialogue, cutscenes, or special rules for later implementation.</p><textarea id="room-notes" placeholder="Example: Chasers spawn behind the player after WASD tutorial..."></textarea><button id="save-notes">Save Notes</button><div class="panel-heading export-heading">AUTHORING DATA</div><p class="muted">The exported JSON is the handoff format for the game runtime.</p><button id="reset-builder">Reset Test Rooms</button></aside>
+    </section>
+  </main>
+  <script src="editor.js"></script>
+</body>
+</html>

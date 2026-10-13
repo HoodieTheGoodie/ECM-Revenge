@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Echo Maze 2 // Recovery Sector</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section id="main-menu" class="full-screen-menu is-visible">
+      <div class="menu-panel"><p class="menu-kicker">ECHO MAZE 2</p><h1>RECOVERY SECTOR</h1><button data-action="continue">Continue</button><button data-action="new-game">New Game</button><button data-action="settings">Settings</button><button data-action="builder">Room Builder</button></div>
+    </section>
+    <section id="loading-screen" class="full-screen-menu">
+      <div class="loading-panel"><p class="menu-kicker">ECHO MAZE 2</p><h2>LOADING AREA</h2><div class="loading-track"><span></span></div></div>
+    </section>
+    <section id="game-frame" class="game-frame is-hidden" aria-label="Echo Maze 2 game">
+      <canvas id="game" width="960" height="600"></canvas>
+      <div class="scanlines" aria-hidden="true"></div>
+      <div id="mini-map" class="mini-map" aria-label="Discovered rooms"></div>
+      <header class="hud-top">
+        <div class="status-hud" aria-label="Player status">
+          <div class="quick-actions"><button class="inventory-button" type="button" data-action="inventory" aria-label="Inventory" title="Inventory"><span id="player-level">1</span></button><div id="weapon-quickbar" class="weapon-quickbar"><button class="weapon-slot-button is-active" data-weapon-slot="0" aria-label="Weapon slot 1"><span class="weapon-icon"></span><b>1</b></button><button class="weapon-slot-button" data-weapon-slot="1" aria-label="Weapon slot 2"><span class="weapon-icon"></span><b>2</b></button><button class="weapon-slot-button" data-weapon-slot="2" aria-label="Weapon slot 3"><span class="weapon-icon"></span><b>3</b></button></div></div>
+          <div class="status-bars">
+            <div class="status-row">
+              <span class="status-bar health-bar"><span id="health-bar"></span></span>
+              <span id="health-value">100%</span>
+            </div>
+            <div class="status-row">
+              <span class="status-bar stamina-bar"><span id="stamina-bar"></span></span>
+              <span id="stamina-value">100%</span>
+            </div>
+            <div class="status-row">
+              <span class="status-bar experience-bar"><span id="experience-bar"></span></span>
+              <span id="experience-value">0%</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      <section id="pause-menu" class="menu-screen"><div class="menu-panel"><p class="menu-kicker">SYSTEM PAUSED</p><h2>PAUSE</h2><button data-action="resume">Resume</button><button data-action="settings">Settings</button><button data-action="main-menu">Main Menu</button></div></section>
+      <section id="game-over-menu" class="menu-screen"><div class="menu-panel"><p class="menu-kicker">CONNECTION LOST</p><h2>YOU DIED</h2><p class="death-copy">The system reclaimed your signal.</p><button data-action="retry">Retry</button><button data-action="main-menu">Main Menu</button></div></section>
+      <section id="inventory-menu" class="menu-screen inventory-screen">
+        <div class="inventory-panel">
+          <div class="inventory-header"><div><p class="menu-kicker">RUNNER LOADOUT</p><h2>INVENTORY</h2></div><button class="close-button" data-action="back" aria-label="Close inventory">X</button></div>
+          <div class="inventory-columns">
+            <div class="inventory-column"><h3>ITEMS</h3><div id="inventory-items"></div></div>
+            <div class="inventory-column equipment-column"><h3>EQUIPMENT</h3><div class="equipment-slots"><div class="equipment-slot"><small>ARMOR</small><strong data-equipment-slot="armor"><span class="item-icon placeholder-circle"></span></strong></div><div class="equipment-slot"><small>SHIELD</small><strong data-equipment-slot="shield"><span class="item-icon placeholder-circle"></span></strong></div><div class="equipment-slot"><small>TRINKET</small><strong data-equipment-slot="trinket"><span class="item-icon placeholder-circle"></span></strong></div></div><div class="weapon-heading"><h3>WEAPON SLOTS</h3></div><div class="weapon-slots"><div data-inventory-weapon-slot="0"><span class="item-icon placeholder-circle"></span></div><div data-inventory-weapon-slot="1"><span class="item-icon placeholder-circle"></span></div><div data-inventory-weapon-slot="2"><span class="item-icon placeholder-circle"></span></div></div><h3 class="locked-heading">LOCKED</h3><div class="locked-slots"><div><span class="item-icon placeholder-circle"></span></div><div><span class="item-icon placeholder-circle"></span></div><div><span class="item-icon placeholder-circle"></span></div></div></div>
+          </div>
+          <p class="inventory-hint">Press 1, 2, or 3 to select a weapon slot.</p>
+        </div>
+      </section>
+      <section id="settings-menu" class="menu-screen"><div class="menu-panel"><p class="menu-kicker">SYSTEM CONFIG</p><h2>SETTINGS</h2><div class="setting-row">Audio <span>ON</span></div><div class="setting-row">Screen shake <span>OFF</span></div><button data-action="back">Back</button></div></section>
+      <section id="map-menu" class="menu-screen map-screen"><div class="map-panel"><div class="map-header"><div><p class="menu-kicker">NAVIGATION</p><h2>MAP</h2></div><button class="close-button" data-action="back">X</button></div><div id="map-viewport" class="map-viewport"><div id="map-rooms" class="map-rooms"></div></div><div class="map-tools"><button data-marker="puzzle">? PUZZLE</button><button data-marker="boss">! BOSS</button><button data-marker="cleared">X CLEARED</button><span>WHEEL TO ZOOM / DRAG TO MOVE / RIGHT CLICK TO REMOVE</span></div></div></section>
+      <section id="room-view-menu" class="menu-screen room-view-overlay"><div class="room-view-label"><p class="menu-kicker">SCANNER VIEW</p><strong>ROOM OVERVIEW</strong><span>PRESS N TO RETURN</span></div></section>
+    </section>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
