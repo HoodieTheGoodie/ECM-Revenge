@@ -8,22 +8,76 @@
 </head>
 <body>
   <main class="editor-shell">
-    <header class="editor-header"><div><span class="eyebrow">ECHO MAZE 2</span><h1>ROOM BUILDER</h1></div><div class="header-actions"><button id="undo-edit">Undo</button><button id="redo-edit">Redo</button><button id="playtest-room">Playtest Room</button><button id="export-room">Export Rooms</button><button id="import-room">Import Rooms</button><input id="import-file" type="file" accept="application/json,.json" hidden><a href="index.html">Back to Game</a></div></header>
+    <header class="editor-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">E<span>M</span></span><div><span class="eyebrow">ECHO MAZE 2 / CREATOR TOOLS</span><h1>Room builder</h1></div></div>
+      <div class="header-actions"><span class="save-indicator"><i></i>Local workspace</span><div class="history-actions"><button id="undo-edit" title="Undo (Ctrl / Cmd + Z)" disabled>↶ Undo</button><button id="redo-edit" title="Redo (Ctrl / Cmd + Shift + Z)" disabled>↷ Redo</button></div><a class="back-link" href="index.html">Back to game</a><button id="playtest-room" class="primary-button">▶ Playtest room</button></div>
+    </header>
     <section class="editor-layout">
-      <aside class="tool-panel">
-        <div class="panel-heading">ROOMS</div><div id="room-list" class="room-list"></div>
-        <div class="panel-heading">TOOLS</div>
-        <div class="tool-list"><button class="tool-button is-selected" data-tool="select">Select / Open Door</button><button class="tool-button" data-tool="spawn">Player Spawn</button><button class="tool-button" data-tool="wall">Wall</button><button class="tool-button" data-tool="door">Room Door</button><button class="tool-button" data-tool="maze-door">Maze Door</button><button class="tool-button" data-tool="locked-door">Locked Door</button><button class="tool-button" data-tool="key">Key</button><button class="tool-button" data-tool="chaser">Chaser</button><button class="tool-button" data-tool="chest">Chest</button><button class="tool-button" data-tool="erase">Erase</button></div>
-        <div class="panel-heading doors-heading">DOORS</div><button id="generate-maze" class="wide-tool">Generate Maze From Doors</button>
-        <label class="color-control">Lock / key color<select id="lock-color"><option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Yellow</option><option value="purple">Purple</option></select></label>
-        <label class="color-control">Locked door rule<select id="lock-rule"><option value="key">Matching key</option><option value="all-enemies">Clear all enemies</option><option value="switches">Switch puzzle</option></select></label>
-        <div class="zoom-controls"><button id="zoom-out">-</button><span id="zoom-value">100%</span><button id="zoom-in">+</button><button id="zoom-reset">Reset</button></div>
-        <p class="tool-help">The canvas is larger than the viewport and scrolls. Drag walls. Click a door to enter its room. Erase doors to remove connected room trees.</p>
+      <aside class="tool-panel" aria-label="Rooms and drawing tools">
+        <section class="room-browser">
+          <div class="panel-heading">World rooms <span id="room-count" class="count-badge"></span></div>
+          <label class="color-control section-control"><span class="sr-only">Filter by section</span><select id="section-filter"></select></label>
+          <label class="room-search"><span class="sr-only">Search rooms</span><input id="room-search" type="search" placeholder="Find a room…" autocomplete="off"></label>
+          <nav id="room-list" class="room-list" aria-label="Choose room"></nav>
+          <p id="room-empty" class="empty-state" hidden>No matching rooms.</p>
+        </section>
+        <section class="toolbox" aria-label="Toolbox">
+          <div class="panel-heading">Toolbox <span class="quiet-label">click to place</span></div>
+          <div class="tool-group-label">Build</div>
+          <div class="tool-list">
+            <button class="tool-button is-selected" data-tool="select" aria-pressed="true"><span class="tool-symbol" aria-hidden="true">↖</span>Select</button>
+            <button class="tool-button" data-tool="wall" aria-pressed="false"><span class="tool-symbol" aria-hidden="true">▤</span>Wall</button>
+            <button class="tool-button" data-tool="spawn" aria-pressed="false"><span class="tool-symbol blue" aria-hidden="true">◉</span>Start point</button>
+            <button class="tool-button" data-tool="erase" aria-pressed="false"><span class="tool-symbol pink" aria-hidden="true">×</span>Erase</button>
+          </div>
+          <div class="tool-group-label">Doors & puzzles</div>
+          <div class="tool-list">
+            <button class="tool-button" data-tool="door" aria-pressed="false"><span class="tool-symbol" aria-hidden="true">⇥</span>Room door</button>
+            <button class="tool-button" data-tool="maze-door" aria-pressed="false"><span class="tool-symbol" aria-hidden="true">↳</span>Dungeon</button>
+            <button class="tool-button" data-tool="locked-door" aria-pressed="false"><span class="tool-symbol pink" aria-hidden="true">▥</span>Barrier</button>
+            <button class="tool-button" data-tool="key" aria-pressed="false"><span class="tool-symbol gold" aria-hidden="true">⚿</span>Key</button>
+            <button class="tool-button" data-tool="switch" aria-pressed="false"><span class="tool-symbol gold" aria-hidden="true">⊡</span>Switch</button>
+            <button class="tool-button" data-tool="terminal" aria-pressed="false"><span class="tool-symbol blue" aria-hidden="true">▣</span>Terminal</button>
+          </div>
+          <div class="tool-group-label">Encounters & loot</div>
+          <div class="tool-list">
+            <button class="tool-button" data-tool="chaser" aria-pressed="false"><span class="tool-symbol pink" aria-hidden="true">●</span>Chaser</button>
+            <button class="tool-button" data-tool="boss" aria-pressed="false"><span class="tool-symbol pink" aria-hidden="true">◆</span>Pig boss</button>
+            <button class="tool-button" data-tool="chest" aria-pressed="false"><span class="tool-symbol gold" aria-hidden="true">▰</span>Chest</button>
+          </div>
+        </section>
+        <p class="sidebar-tip">New rooms grow from doors. Place a room door on an edge, then use Select to enter it.</p>
       </aside>
-      <section class="workspace"><div class="canvas-wrap"><canvas id="editor-canvas" width="960" height="600"></canvas></div><div class="workspace-footer"><span id="room-status"></span><span>Autosaves locally</span></div></section>
-      <aside class="notes-panel"><div class="panel-heading">ROOM NOTES</div><p>Describe story moments, tutorials, dialogue, cutscenes, or special rules for later implementation.</p><textarea id="room-notes" placeholder="Example: Chasers spawn behind the player after WASD tutorial..."></textarea><button id="save-notes">Save Notes</button><div class="panel-heading export-heading">AUTHORING DATA</div><p class="muted">The exported JSON is the handoff format for the game runtime.</p><button id="reset-builder">Reset Test Rooms</button></aside>
+
+      <section class="workspace" aria-label="Room canvas">
+        <div class="workspace-toolbar"><div class="room-heading"><span id="workspace-section" class="eyebrow"></span><h2 id="workspace-title"></h2></div><div class="zoom-controls" aria-label="Canvas zoom"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-value">100%</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-fit" title="Fit the entire room">Fit</button><button id="zoom-reset" title="Actual size">1:1</button></div></div>
+        <div class="canvas-wrap" tabindex="0" aria-label="Scrollable room canvas"><canvas id="editor-canvas" width="960" height="600" aria-label="Place and select room objects"></canvas></div>
+        <div class="workspace-footer"><span id="room-status"></span><span id="cursor-position">40 px grid</span></div>
+        <div class="canvas-hint"><span id="active-tool-label">SELECT</span><span id="canvas-help">Click an object to inspect it. Click a room door to enter.</span></div>
+      </section>
+
+      <aside class="notes-panel" aria-label="Properties and room settings">
+        <section class="inspector-card">
+          <div class="panel-heading"><span id="inspector-mode">Active tool</span><button id="clear-selection" class="text-button" hidden>Clear</button></div>
+          <h2 id="inspector-title">Select</h2><p id="tool-description" class="tool-help"></p>
+          <div id="selection-info" class="selection-info" hidden></div>
+          <div id="enemy-properties" hidden><label class="color-control">Enemy level<input id="enemy-level" type="number" min="1" max="10" value="1"></label><label class="color-control">Weapon<select id="enemy-weapon"><option value="random">Random weapon</option><option value="unarmed">Unarmed</option><option value="sword">Sword</option><option value="spear">Spear</option><option value="daggers">Daggers</option><option value="gun">Laser gun</option></select></label><label class="color-control">Armor<select id="enemy-armor"><option value="random">Random armor</option><option value="none">No armor</option><option value="swift">Swift</option><option value="tanker">Tanker</option></select></label><p class="tool-help">Place as many enemies as the encounter needs. Select an existing marker to edit its equipment.</p></div>
+          <div id="chest-properties" hidden><label class="color-control">Chest loot<select id="chest-loot"><option value="default-sword">Starter sword + Map View + Dash</option><option value="random">Random loot</option><option value="clear-sight">Clear Sight ability</option><option value="dash">Dash ability</option><option value="map-view">Map View ability</option><option value="heal">Repair Pulse ability</option><option value="barrier">Phase Barrier ability</option><option value="stamina">Energy Surge ability</option><option value="sword">Sword</option><option value="spear">Spear</option><option value="daggers">Daggers</option><option value="gun">Laser gun</option><option value="scythe">Unique scythe</option><option value="shield">Shield · special reward</option><option value="swift-armor">Swift armor</option><option value="tanker-armor">Tanker armor</option><option value="trinket">Trinket</option></select></label><label class="color-control">Chest rarity<select id="chest-rarity"><option value="auto">Automatic</option><option value="common">Common</option><option value="rare">Rare</option><option value="epic">Epic</option><option value="unique">Unique</option></select></label><p id="chest-help" class="tool-help">Rarity is rolled when Automatic is selected.</p></div>
+          <label id="barrier-properties" class="color-control" hidden>Barrier opens with<select id="lock-rule"><option value="key">Matching key</option><option value="all-enemies">All enemies defeated</option><option value="switches">Linked wall switch</option><option value="terminal">Numbered terminal</option></select></label>
+          <label id="color-properties" class="color-control" hidden>Lock / key color<select id="lock-color"><option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Yellow</option><option value="purple">Purple</option></select></label>
+          <label id="terminal-properties" class="color-control" hidden>Terminal number<select id="terminal-number"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+          <div id="switch-properties" hidden><label class="color-control">Target room<select id="switch-room-filter"><option value="all">All rooms</option></select></label><label class="color-control">Target barrier<select id="switch-target"></select></label><button id="focus-switch-target" class="wide-tool" disabled>↗ Show target barrier</button><button id="link-switch" class="wide-tool primary-button" hidden>Save switch link</button></div><p id="link-status" class="link-status" role="status" hidden></p><div id="linked-switches" class="linked-switches" hidden></div>
+          <div id="selection-actions" class="selection-actions" hidden><button id="apply-object" class="wide-tool primary-button">Apply object changes</button><button id="remove-object" class="wide-tool danger-button">Remove object</button></div>
+          <p id="tool-feedback" class="tool-feedback" role="status" aria-live="polite"></p>
+        </section>
+        <details class="inspector-section" id="room-settings-panel"><summary>Room settings <span id="room-size-summary"></span></summary><div class="details-content"><label class="color-control">Room name<input id="room-name" maxlength="80"></label><label class="color-control">Section name<input id="room-section" list="section-names" maxlength="60"><datalist id="section-names"></datalist></label><label class="color-control">Room role<select id="room-type"><option value="room">Standard room</option><option value="hub">Hub / Tip Box</option><option value="challenge">Combat challenge</option></select></label><label class="color-control">Tutorial stage<select id="tutorial-stage"><option value="">None</option><option value="movement">Movement hallway</option><option value="equipment">Sword / map equipment</option><option value="lore">Virus lore</option></select></label><label class="check-control"><input id="tutorial-ambush" type="checkbox">Tutorial ambush after Tip Box</label><p class="tool-help">In a hub, the tutorial chasers appear behind you after you pass its Tip Box. Disable this for safe hubs.</p><div class="dimension-controls"><label class="color-control">Width (px)<input id="room-width" type="number" min="120" max="8000" step="40"></label><label class="color-control">Height (px)<input id="room-height" type="number" min="120" max="8000" step="40"></label></div><button id="save-room-settings" class="wide-tool">Apply room settings</button><p id="settings-feedback" class="tool-feedback" role="status"></p></div></details>
+        <details class="inspector-section"><summary>Doors & connections <span id="door-count"></span></summary><div class="details-content"><div id="door-list" class="door-list"></div><button id="generate-maze" class="wide-tool">Generate maze from doors</button><p class="tool-help">Needs two room doors. Replaces interior walls; Undo restores them.</p></div></details>
+        <details class="inspector-section"><summary>Room notes</summary><div class="details-content"><p class="tool-help">Story beats, dialogue, tutorials, and ideas for this room.</p><textarea id="room-notes" placeholder="What happens in this room?"></textarea><button id="save-notes" class="wide-tool">Save notes</button><p id="notes-feedback" class="tool-feedback" role="status"></p></div></details>
+        <details class="inspector-section"><summary>Import, export & reset</summary><div class="details-content"><p class="tool-help">Your rooms save in this browser. Export a JSON backup to keep or share your work.</p><div class="data-actions"><button id="export-room">Export rooms</button><button id="import-room">Import rooms</button></div><input id="import-file" type="file" accept="application/json,.json" hidden><p class="tool-help">Import replaces this workspace. You can undo the import.</p><button id="reset-builder" class="wide-tool danger-button">Reset test rooms</button></div></details>
+        <details class="inspector-section"><summary>Quick guide</summary><div class="details-content"><ul class="quick-guide"><li><b>Wall:</b> drag a rectangle on the grid.</li><li><b>Select:</b> click loot, enemies, or puzzles to edit their settings.</li><li><b>Switch:</b> make a switch barrier, then choose it as a target and place a switch beside a wall.</li><li><b>Navigate:</b> use room names, or click a door with Select. Expand the arrow beside a room to see its dungeons. Searching also reveals matching dungeon rooms.</li><li><b>Large rooms:</b> scroll the canvas or use Fit.</li><li><b>Undo:</b> Ctrl / Cmd + Z. Redo with Shift + Z.</li><li><b>Erase:</b> drag to remove objects or wall tiles. Deleting a room door also removes its connected room tree after confirmation.</li></ul></div></details>
+      </aside>
     </section>
   </main>
-  <script src="editor.js"></script>
+  <script src="editor.js?v=4"></script>
 </body>
 </html>

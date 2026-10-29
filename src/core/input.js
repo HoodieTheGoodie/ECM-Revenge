@@ -13,11 +13,13 @@ export class Input {
 
     canvas.addEventListener('mousedown', (event) => {
       if (event.button === 0) this.mousePressed.add('mouse1');
+      if (event.button === 2) this.mousePressed.add('mouse2');
     });
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
     window.addEventListener('keydown', (event) => {
       const key = event.key.toLowerCase();
-      if (event.code === 'Escape') event.preventDefault();
+      if (['Escape', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code) && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) event.preventDefault();
       if (!event.repeat) this.pressed.add(key);
       if (!event.repeat && event.code) this.pressed.add(event.code.toLowerCase());
       this.keys.add(key);
@@ -26,6 +28,7 @@ export class Input {
     window.addEventListener('keyup', (event) => {
       this.keys.delete(event.key.toLowerCase());
     });
+    window.addEventListener('blur', () => { this.keys.clear(); this.pressed.clear(); this.mousePressed.clear(); });
   }
 
   axis() {

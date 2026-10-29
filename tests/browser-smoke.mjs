@@ -1,0 +1,148 @@
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { mkdir } from 'node:fs/promises';
+import { chromium } from 'playwright';
+
+const baseURL = process.env.ECHO_TEST_URL ?? 'http://127.0.0.1:8173';
+const server = process.env.ECHO_TEST_URL ? null : spawn('python3', ['-m', 'http.server', '8173', '--bind', '127.0.0.1'], { stdio: 'ignore' });
+let browser;
+const errors = [];
+try {
+  for (let i = 0; i < 100; i++) {
+    try { if ((await fetch(baseURL)).ok) break; } catch { /* server is starting */ }
+    if (i === 99) throw new Error('Test web server did not start.');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.on('pageerror', (error) => errors.push(error.message));
+  const attach = async () => page.evaluate(async () => { window.testGame = (await import('/src/main.js')).game; });
+  const playing = async () => page.waitForFunction(() => window.testGame.mode === 'playing');
+  const mode = async () => page.evaluate(() => testGame.mode);
+  const press = async (key) => { await page.keyboard.press(key); await page.waitForTimeout(70); };
+  const closeTippy = async () => { for (let n = 0; n < 20 && await page.locator('#tippy-next').isVisible(); n++) await page.click('#tippy-next'); };
+  await page.goto(baseURL);
+  await attach();
+  assert.equal(await mode(), 'menu');
+  await page.click('#main-menu [data-action="settings"]');
+  assert.equal(await mode(), 'settings');
+  await page.uncheck('#settings-audio');
+  await page.check('#settings-reduced-motion');
+  assert.equal(await page.evaluate(() => testGame.settings.audio), false);
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('reduced-motion')), true);
+  await page.uncheck('#settings-reduced-motion');
+  await page.click('#settings-menu [data-action="back"]');
+  assert.equal(await mode(), 'menu');
+  await page.click('[data-action="new-game"]');
+  await playing();
+  const startY = await page.evaluate(() => testGame.player.position.y);
+  await page.keyboard.down('s'); await page.waitForTimeout(180); await page.keyboard.up('s');
+  assert.equal(await page.evaluate(() => testGame.player.position.y), startY);
+  await closeTippy();
+  await page.keyboard.down('s'); await page.waitForTimeout(250); await page.keyboard.up('s');
+  assert.ok(await page.evaluate((y) => testGame.player.position.y > y, startY));
+  await press('Escape');
+  await page.click('#pause-menu [data-action="main-menu"]');
+  assert.equal(await mode(), 'menu');
+  assert.equal(await page.locator('[data-action="continue"]').isDisabled(), true);
+
+  await page.click('[data-action="playground"]');
+  await playing(); await closeTippy();
+  assert.equal(await page.evaluate(() => testGame.roomManager.currentId), 'feature-lab');
+  assert.equal(await page.evaluate(() => testGame.inventory.items.length), 0);
+  await page.locator('#playground-tools summary').click();
+  await page.click('[data-action="debug-loadout"]');
+  await page.locator('#playground-tools summary').click();
+  await press('m');
+  assert.ok(await page.locator('#map-rooms .map-connection').count() >= 3);
+  await press('m');
+  await press('e');
+  assert.equal(await mode(), 'tip-box');
+  await page.click('[data-tip-tab="skills"]');
+  await page.click('[data-tip-action="skill"][data-skill="maxHealth"]');
+  assert.equal(await page.evaluate(() => testGame.player.maxHealth), 110);
+  await page.click('[data-tip-action="reset-skills"]');
+  assert.equal(await page.evaluate(() => testGame.inventory.tokens), 20);
+  await page.click('[data-tip-tab="gear"]');
+  const oldSword = await page.evaluate(() => testGame.inventory.items.find((item) => item.type === 'sword' && item.rarity === 'epic').id);
+  await page.click(`[data-tip-action="upgrade"][data-item-id="${oldSword}"]`);
+  assert.equal(await page.evaluate((id) => testGame.inventory.items.find((item) => item.id === id).level, oldSword), 5);
+  await page.click(`[data-tip-action="reroll"][data-item-id="${oldSword}"]`);
+  await page.click('[data-tip-tab="shop"]');
+  await page.click('[data-tip-action="buy"][data-offer="spear"]');
+  assert.equal(await page.evaluate(() => testGame.inventory.tokens), 16);
+  await page.click('[data-tip-tab="grinder"]');
+  const dagger = await page.evaluate(() => testGame.inventory.items.find((item) => item.type === 'daggers').id);
+  await page.click(`[data-tip-action="grind"][data-item-id="${dagger}"]`);
+  assert.equal(await page.evaluate(() => testGame.inventory.grinderProgress), 5);
+  await page.click('[data-tip-tab="save"]');
+  await page.click('[data-tip-action="save"]');
+  const savedLab = await page.evaluate(() => localStorage.getItem('echo-maze-2-save-playground'));
+  assert.equal(JSON.parse(savedLab).inventory.tokens, 16);
+  assert.equal(await page.evaluate(() => localStorage.getItem('echo-maze-2-save')), null);
+  await page.click('#tip-box-menu [data-action="resume"]');
+  await closeTippy();
+  await press('i');
+  assert.equal(await page.locator('[data-inventory-weapon-slot]').count(), 3);
+  assert.equal(await page.locator('[data-inventory-ability-slot]').count(), 5);
+  assert.ok(await page.locator('#inventory-items svg').count() >= 6);
+  await mkdir('test-results', { recursive: true });
+  await page.screenshot({ path: 'test-results/inventory.png' });
+  await press('i');
+
+  // A real unsaved chest pickup must roll back when the checkpoint is reloaded.
+  await page.evaluate(() => { testGame.player.position = { x: 280, y: 300 }; testGame.player.velocity = { x: 0, y: 0 }; });
+  await press('e'); await page.waitForTimeout(1500); await press('e');
+  assert.equal(await page.evaluate(() => testGame.inventory.items.some((item) => item.type === 'scythe')), true);
+  await page.locator('#playground-tools summary').click();
+  await page.click('[data-action="test-restore-save"]');
+  await playing(); await closeTippy();
+  assert.equal(await page.evaluate(() => testGame.inventory.items.some((item) => item.type === 'scythe')), false);
+  assert.equal(await page.evaluate(() => testGame.chests.length), 2);
+
+  // Trigger the actual Virus/reset path, then exercise the equipment gate and autosave.
+  await page.click('[data-action="test-hardmode"]');
+  assert.equal(await mode(), 'cutscene');
+  assert.match(await page.locator('#virus-text').textContent(), /How did you come back/);
+  await page.click('#virus-next');
+  await playing(); await closeTippy();
+  assert.equal(await page.evaluate(() => testGame.inventory.items.length), 0);
+  assert.equal(await page.evaluate(() => testGame.hardmodePending), true);
+  assert.equal(await page.evaluate(() => localStorage.getItem('echo-maze-2-save-playground')), savedLab);
+  await page.click('[data-action="test-hub-return"]');
+  assert.equal(await page.evaluate(() => testGame.roomManager.currentId), 'signal-hall');
+  await closeTippy();
+  await page.click('[data-action="test-recovery"]');
+  await playing(); await closeTippy();
+  await press('e'); await page.waitForTimeout(1500); await press('e');
+  assert.equal(await page.evaluate(() => testGame.inventory.items.length), 2);
+  await press('i');
+  const retained = await page.evaluate(() => testGame.inventory.items.map((item) => ({ id: item.id, type: item.type })));
+  for (const item of retained) await page.click(`[data-inventory-action="equip"][data-item-id="${item.id}"]`);
+  await press('i'); await closeTippy();
+  await page.click('[data-action="test-hub-return"]');
+  await playing();
+  assert.equal(await page.evaluate(() => testGame.roomManager.currentId), 'main-hub');
+  assert.equal(await page.evaluate(() => testGame.hardmodePending), false);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('echo-maze-2-save-playground')).hardmode), true);
+  assert.equal(await page.evaluate(() => localStorage.getItem('echo-maze-2-save')), null);
+  assert.equal(await page.evaluate(() => testGame.canUseDoor(testGame.roomManager.current.doors.find((door) => door.targetRoom === 'section-two-entry'))), true);
+  await page.screenshot({ path: 'test-results/hardmode.png' });
+  await press('Escape');
+  await page.click('#pause-menu [data-action="main-menu"]');
+  await page.click('[data-action="continue-playground"]');
+  await playing();
+  assert.equal(await page.evaluate(() => testGame.hardmode), true);
+
+  await press('Escape');
+  await page.click('#pause-menu [data-action="main-menu"]');
+  await page.click('[data-action="builder"]');
+  await page.waitForURL('**/editor.html');
+  await page.waitForFunction(() => document.querySelector('#editor-canvas').width > 0);
+  await page.screenshot({ path: 'test-results/editor.png' });
+  assert.deepEqual(errors, []);
+  console.log('Browser smoke passed: menus, movement, maps, all Tip Box tabs, inventory, chest rollback, Hardmode reset/gate/autosave/reload, campaign isolation, editor navigation.');
+} finally {
+  await browser?.close();
+  server?.kill();
+}

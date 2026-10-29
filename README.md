@@ -31,3 +31,4 @@ Room definitions in `src/world/rooms.js` are the current canonical level format.
 The room builder currently starts with a tutorial hallway. Use `Room Door` to create a connected room, then click that door with `Select / Open Door` to build the connected room. Add walls, Maze Doors, colored Keys, Chasers, and chests, write future story or cutscene instructions in Room Notes, and export the authoring data as JSON.
 
 Use `Playtest Room` to launch the selected room in the game. Use `Import Rooms` to restore an exported JSON collection and continue editing it; the runtime also loads the current authored collection for playtesting.
+

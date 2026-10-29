@@ -1,3 +1,5 @@
+import { campaignRooms, playgroundRooms } from './campaign.js';
+
 function boundaryWalls(width, height, exits) {
   const openingStart = height / 2 - 100;
   const openingSize = 200;
@@ -53,6 +55,9 @@ const relayMaze = [
 ];
 
 export const rooms = {
+  __meta: { startRoomId: 'signal-hall' },
+  ...campaignRooms,
+  ...playgroundRooms,
   recovery: { id: 'recovery', name: 'Recovery Sector', width: 3200, height: 2200, gridSize: 100, exits: { right: 'archive' }, chest: { x: 680, y: 520, itemId: 'default-sword' }, keys: [{ id: 'recovery-blue-key', x: 1160, y: 800, color: 'blue' }], doors: [{ id: 'recovery-blue-door', kind: 'maze', x: 1400, y: 800, width: 40, height: 40, lockedColor: 'blue' }], enemies: [{ type: 'chaser', x: 900, y: 520, level: 1 }, { type: 'chaser', x: 1900, y: 1540, level: 1 }], walls: [...boundaryWalls(3200, 2200, { right: true }), ...recoveryMaze] },
   archive: { id: 'archive', name: 'Dead Archive', width: 3200, height: 2200, gridSize: 100, exits: { left: 'recovery', right: 'relay' }, keys: [], doors: [], enemies: [{ type: 'chaser', x: 760, y: 520, level: 1 }, { type: 'chaser', x: 1540, y: 860, level: 1 }, { type: 'chaser', x: 2450, y: 1500, level: 1 }], walls: [...boundaryWalls(3200, 2200, { left: true, right: true }), ...archiveMaze] },
   relay: { id: 'relay', name: 'Signal Relay', width: 3200, height: 2200, gridSize: 100, exits: { left: 'archive' }, keys: [], doors: [], enemies: [{ type: 'chaser', x: 850, y: 720, level: 1 }, { type: 'chaser', x: 2020, y: 1480, level: 1 }], walls: [...boundaryWalls(3200, 2200, { left: true }), ...relayMaze] }
